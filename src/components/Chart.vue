@@ -1,0 +1,136 @@
+<template>
+  <div class="container" ref="container">
+    <div class="chart" @mousedown="mousedown">
+      <vue3-chart-js
+          :id="doughnutChart.id"
+          :type="doughnutChart.type"
+          :data="doughnutChart.data"
+      ></vue3-chart-js>
+    </div>
+  </div>
+</template>
+
+<script>
+import Vue3ChartJs from '@j-t-mcc/vue3-chartjs'
+
+export default {
+  name: 'App',
+  components: {
+    Vue3ChartJs,
+  },
+  methods: {
+    cellRowCol: function(e) {
+      const containerWidth = this.$refs.container.clientWidth;
+      const containerHeight = this.$refs.container.clientHeight;
+
+      const cellWidth = containerWidth / (20 * (containerWidth / containerHeight));
+      const cellHeight = containerHeight / 20;
+
+      const eventX = e.x;
+      const eventY = e.y;
+
+      let columns = [];
+      let rows = [];
+
+      for (let x = 0; x<containerWidth; x++) {
+        if (x % cellWidth == 0) {
+          columns.push(x);
+          x += cellWidth;
+          x--;
+        }
+      }
+      
+      for (let y = 0; y<containerHeight; y++) {
+        if (y % cellHeight == 0) {
+          rows.push(y);
+          y += cellHeight;
+          y--;
+        }
+      }
+
+      let col = 0;
+      let row = 0;
+
+      for (let x = 0; x<columns.length-1; x++, col++) {
+        if (eventX >= columns[x] && eventX < columns[x+1]) {
+          break;
+        }
+      }
+
+      for (let y = 0; y<rows.length-1; y++, row++) {
+        if (eventY >= rows[y] && eventY < rows[y+1]) {
+          break;
+        }
+      }
+
+      const coord = {row: row, col: col};
+      
+      return coord;
+    },
+
+    mousemove: function(e) {
+      const target = this.targetBeingDragged;
+      const rowCol = this.cellRowCol(e);
+
+      target.parentNode.style.setProperty("grid-row", rowCol.row);
+      target.parentNode.style.setProperty("grid-column", rowCol.col);
+    },
+
+    mouseup: function() {
+      window.removeEventListener("mousemove", this.mousemove);
+      window.removeEventListener("mouseup", this.mouseup);
+    },
+
+    mousedown: function(e) {
+      this.targetBeingDragged = e.target;
+
+      window.addEventListener("mousemove", this.mousemove);
+      window.addEventListener("mouseup", this.mouseup);
+    },
+  }, 
+  setup () {
+    const doughnutChart = {
+      id: 'doughnut',
+      type: 'doughnut',
+      data: {
+        targetBeingDragged: {},
+        labels: ['VueJs', 'EmberJs', 'ReactJs', 'AngularJs'],
+        datasets: [
+          {
+            backgroundColor: [
+              '#41B883',
+              '#E46651',
+              '#00D8FF',
+              '#DD1B16'
+            ],
+            data: [40, 20, 80, 10]
+          }
+        ]
+      }
+    }
+    
+    return {
+      doughnutChart
+    }
+  },
+}
+</script>
+
+<style>
+  .chart {
+    height: 300px;
+    width: 300px;
+    /*
+    display: flex;  
+    flex-direction: column;
+    */
+  }
+
+  .container {
+    height: 900px;
+    width: 1800px;
+    display: grid;
+    grid-template-columns: repeat(40, 1fr);
+    grid-template-rows: repeat(20, 1fr);
+  }
+</style>
