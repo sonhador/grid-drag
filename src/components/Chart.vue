@@ -1,6 +1,6 @@
 <template>
   <div class="container" ref="container">
-    <div class="chart" @mousedown="mousedown">
+    <div class="chart" @mousedown="mousedown" @mouseover="mouseover" @mouseleave="mouseleave">
       <vue3-chart-js
           :id="doughnutChart.id"
           :type="doughnutChart.type"
@@ -19,15 +19,15 @@ export default {
     Vue3ChartJs,
   },
   methods: {
-    cellRowCol: function(e) {
+    cellRowCol: function() {
       const containerWidth = this.$refs.container.clientWidth;
       const containerHeight = this.$refs.container.clientHeight;
 
       const cellWidth = containerWidth / (20 * (containerWidth / containerHeight));
       const cellHeight = containerHeight / 20;
 
-      const eventX = e.x;
-      const eventY = e.y;
+      const eventX = this.targetSelectedX;
+      const eventY = this.targetSelectedY;
 
       let columns = [];
       let rows = [];
@@ -64,12 +64,19 @@ export default {
       }
 
       const coord = {row: row, col: col};
-      
+
       return coord;
     },
 
     mousemove: function(e) {
-      const target = this.targetBeingDragged;
+      if (e.x < 0 || e.y < 0) {
+        return;
+      }
+
+      this.targetSelectedX = e.x;
+      this.targetSelectedY = e.y;
+
+      const target = this.targetSelected;
       const rowCol = this.cellRowCol(e);
 
       target.parentNode.style.setProperty("grid-row", rowCol.row);
@@ -79,21 +86,54 @@ export default {
     mouseup: function() {
       window.removeEventListener("mousemove", this.mousemove);
       window.removeEventListener("mouseup", this.mouseup);
+
+      this.targetSelected.style.setProperty("cursor", "grab");
+
+      this.unHighlight(this.targetSelected);
     },
 
     mousedown: function(e) {
-      this.targetBeingDragged = e.target;
+      this.targetSelected = e.target;
+      this.highlight(e.target);
+
+      e.target.style.setProperty("cursor", "grabbing");
 
       window.addEventListener("mousemove", this.mousemove);
       window.addEventListener("mouseup", this.mouseup);
     },
+
+    mouseover: function(e) {
+      this.targetSelected = e.target;
+      this.highlight(e.target);
+    },
+
+    mouseleave: function() {
+      this.unHighlight(this.targetSelected);
+    },
+
+    highlight: function(elem) {
+      elem.style.setProperty("border-width", "1px");
+      elem.style.setProperty("border-color", "red");
+      elem.style.setProperty("border-style", "solid");
+      elem.style.setProperty("cursor", "grab");
+    },
+
+    unHighlight: function(elem) {
+      elem.style.setProperty("border-width", "");
+      elem.style.setProperty("border-color", "");
+      elem.style.setProperty("border-style", "");
+      elem.style.setProperty("cursor", "");
+    },
+
   }, 
   setup () {
     const doughnutChart = {
       id: 'doughnut',
       type: 'doughnut',
       data: {
-        targetBeingDragged: {},
+        targetSelected: {},
+        targetSelectedX: 0,
+        targetSelectedY: 0,
         labels: ['VueJs', 'EmberJs', 'ReactJs', 'AngularJs'],
         datasets: [
           {
