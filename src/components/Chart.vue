@@ -19,22 +19,19 @@ export default {
     Vue3ChartJs,
   },
   methods: {
-    cellRowCol: function() {
+    calcGridRowsCols: function() {
       const containerWidth = this.$refs.container.clientWidth;
       const containerHeight = this.$refs.container.clientHeight;
 
       const cellWidth = containerWidth / (20 * (containerWidth / containerHeight));
       const cellHeight = containerHeight / 20;
 
-      const eventX = this.targetSelectedX;
-      const eventY = this.targetSelectedY;
-
-      let columns = [];
+      let cols = [];
       let rows = [];
 
       for (let x = 0; x<containerWidth; x++) {
         if (x % cellWidth == 0) {
-          columns.push(x);
+          cols.push(x);
           x += cellWidth;
           x--;
         }
@@ -48,17 +45,25 @@ export default {
         }
       }
 
+      this.gridRows = rows;
+      this.gridCols = cols;
+    },
+
+    cellRowCol: function() {
+      const eventX = this.targetSelectedX;
+      const eventY = this.targetSelectedY;
+
       let col = 0;
       let row = 0;
 
-      for (let x = 0; x<columns.length-1; x++, col++) {
-        if (eventX >= columns[x] && eventX < columns[x+1]) {
+      for (let x = 0; x<this.gridCols.length-1; x++, col++) {
+        if (eventX >= this.gridCols[x] && eventX < this.gridCols[x+1]) {
           break;
         }
       }
 
-      for (let y = 0; y<rows.length-1; y++, row++) {
-        if (eventY >= rows[y] && eventY < rows[y+1]) {
+      for (let y = 0; y<this.gridRows.length-1; y++, row++) {
+        if (eventY >= this.gridRows[y] && eventY < this.gridRows[y+1]) {
           break;
         }
       }
@@ -95,6 +100,7 @@ export default {
     mousedown: function(e) {
       this.targetSelected = e.target;
       this.highlight(e.target);
+      this.calcGridRowsCols();
 
       e.target.style.setProperty("cursor", "grabbing");
 
@@ -131,6 +137,8 @@ export default {
       id: 'doughnut',
       type: 'doughnut',
       data: {
+        gridRows: [],
+        gridCols: [],
         targetSelected: {},
         targetSelectedX: 0,
         targetSelectedY: 0,
