@@ -2,23 +2,50 @@
   <div class="container" ref="container">
     <div class="chart" @mousedown="mousedown" @mouseover="mouseover" @mouseleave="mouseleave">
       <vue3-chart-js
+          class="chart-component"
           :id="doughnutChart.id"
           :type="doughnutChart.type"
           :data="doughnutChart.data"
       ></vue3-chart-js>
+      <div class="horizontal-resize">
+        <vue-feather type="plus-circle" @click="inc_chart"></vue-feather>
+        <vue-feather type="minus-circle" @click="dec_chart"></vue-feather>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import Vue3ChartJs from '@j-t-mcc/vue3-chartjs'
+import VueFeather from 'vue-feather'
 
 export default {
   name: 'App',
   components: {
     Vue3ChartJs,
+    VueFeather
   },
   methods: {
+    inc_chart: function(e) {
+      let target = e.target.parentNode;
+      while (target.firstChild.className !== "chart-component") {
+        target = target.parentNode;
+      }
+      
+      target = target.firstChild;
+      target.style.width = (parseInt(target.style.width, 10) + 25) + "px";
+    },
+
+    dec_chart: function(e) {
+      let target = e.target.parentNode;
+      while (target.firstChild.className !== "chart-component") {
+        target = target.parentNode;
+      }
+      
+      target = target.firstChild;
+      target.style.width = (parseInt(target.style.width, 10) - 25) + "px";
+    },
+
     calcGridRowsCols: function() {
       const containerWidth = this.$refs.container.clientWidth;
       const containerHeight = this.$refs.container.clientHeight;
@@ -98,6 +125,10 @@ export default {
     },
 
     mousedown: function(e) {
+      if (e.target.className !== "chart-component") {
+        return;
+      }
+
       this.targetSelected = e.target;
       this.highlight(e.target);
       this.calcGridRowsCols();
@@ -109,6 +140,10 @@ export default {
     },
 
     mouseover: function(e) {
+      if (e.target.className !== "chart-component") {
+        return;
+      }
+
       this.targetSelected = e.target;
       this.highlight(e.target);
     },
@@ -166,12 +201,7 @@ export default {
 
 <style>
   .chart {
-    height: 300px;
-    width: 300px;
-    /*
-    display: flex;  
-    flex-direction: column;
-    */
+    position: relative;
   }
 
   .container {
@@ -180,5 +210,19 @@ export default {
     display: grid;
     grid-template-columns: repeat(40, 1fr);
     grid-template-rows: repeat(20, 1fr);
+  }
+
+  .vertical-resize {
+    position: absolute;
+    top: 50%;
+    right: 0px;
+    display: flex;
+    justifiy-content: right;
+    flex-direction: column;
+  }
+
+  .horizontal-resize {
+    position: relative;
+    left: 0%;
   }
 </style>
